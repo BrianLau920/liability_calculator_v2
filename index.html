@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>网约车聚合平台交通事故比例连带责任计算器</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #1557b0;
+            --danger: #d93025;
+            --success: #188038;
+            --warning: #f9ab00;
+            --bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --border: #e0e0e0;
+            --text: #202124;
+            --text-secondary: #5f6368;
+            --shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            padding: 0;
+            color: var(--text);
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container { max-width: 860px; margin: 0 auto; padding: 0 12px 30px; }
+        .header {
+            background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+            color: white;
+            padding: 28px 16px 24px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            position: relative;
+            border-radius: 0 0 16px 16px;
+        }
+        .header .header-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 36px;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+        .header h1 {
+            font-size: clamp(18px, 4vw, 26px);
+            margin: 0;
+            font-weight: 700;
+            line-height: 1.4;
+            text-align: center;
+            padding: 0 40px;
+            letter-spacing: 0.5px;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px 18px;
+            margin-bottom: 16px;
+            transition: box-shadow 0.2s ease;
+        }
+        .card:hover { box-shadow: var(--shadow-hover); }
+        .card h3 {
+            font-size: 16px;
+            color: var(--primary);
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #eef2f7;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+        .card h3 .icon { font-size: 20px; }
+        .form-group { margin-bottom: 12px; }
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 13px;
+            color: var(--text-secondary);
+            flex-wrap: wrap;
+        }
+        .form-label .hint { font-weight: normal; font-size: 11px; color: #999; }
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s;
+            background: white;
+            color: var(--text);
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+        }
+        .form-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235f6368' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+        .platform-entry {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            border: 1px solid #eef2f7;
+        }
+        .platform-entry .platform-number {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 13px;
+            min-width: 36px;
+            white-space: nowrap;
+        }
+        .platform-entry .form-input { flex: 1; min-width: 80px; }
+        .platform-entry .form-input-small { width: 80px; min-width: 60px; flex: none; }
+        .platform-entry label { font-size: 12px; color: var(--text-secondary); white-space: nowrap; font-weight: 500; }
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: var(--primary); color: white; flex: 1; min-width: 100px; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-outline { background: white; color: var(--primary); border: 1.5px solid var(--primary); }
+        .btn-outline:hover { background: #e8f0fe; }
+        .btn-danger { background: white; color: var(--danger); border: 1.5px solid var(--danger); }
+        .btn-danger:hover { background: #fce8e6; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-group { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+        .btn-full {
+            width: 100%;
+            padding: 12px;
+            font-size: 15px;
+            background: var(--primary);
+            color: white;
+            border-radius: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .btn-full:hover { background: var(--primary-dark); }
+        .btn-full-recourse {
+            width: 100%;
+            padding: 12px;
+            font-size: 15px;
+            background: var(--warning);
+            color: white;
+            border-radius: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-top: 0;
+        }
+        .btn-full-recourse:hover { background: #e69500; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+        th {
+            background: #f0f5ff;
+            color: var(--primary);
+            padding: 10px 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #f1f3f4; word-break: break-all; }
+        tr:last-child td { border-bottom: none; }
+        .highlight { color: var(--danger); font-weight: 700; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+        .tag-danger { background: #fce8e6; color: var(--danger); }
+        .tag-success { background: #e6f4ea; color: var(--success); }
+        .recourse-box {
+            border-left: 4px solid var(--warning);
+            background: #fffdf5;
+            padding: 14px;
+            border-radius: 0 8px 8px 0;
+            margin: 12px 0;
+        }
+        .recourse-box h4 { color: #e37400; margin-bottom: 8px; font-size: 14px; }
+        .error-box {
+            background: #fce8e6;
+            border-left: 4px solid var(--danger);
+            padding: 12px;
+            border-radius: 0 8px 8px 0;
+            color: var(--danger);
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+        .empty-state { text-align: center; padding: 30px 20px; color: var(--text-secondary); }
+        .empty-state .icon { font-size: 48px; display: block; margin-bottom: 12px; }
+        .summary-row { background: #f0f7ff; font-weight: 700; }
+        .summary-row td { font-weight: 700; }
+        .amount { font-family: "SF Mono", "Consolas", "Monaco", monospace; font-weight: 600; }
+        @media (max-width: 480px) {
+            .container { padding: 0 6px 12px; }
+            .card { padding: 14px 12px; border-radius: 10px; margin-bottom: 12px; }
+            .platform-entry { padding: 10px; gap: 6px; }
+            .platform-entry .form-input { font-size: 13px; padding: 8px; }
+            .platform-entry .form-input-small { width: 70px; }
+            th, td { padding: 6px 4px; font-size: 11px; }
+            .btn { padding: 8px 14px; font-size: 13px; }
+            .btn-full, .btn-full-recourse { padding: 14px; font-size: 15px; }
+            .header h1 { font-size: 16px; padding: 0 35px; }
+            .header { padding: 20px 10px 16px; }
+            .header .header-icon { font-size: 28px; left: 12px; }
+        }
+        @media (min-width: 768px) {
+            .container { padding: 0 20px 30px; }
+            .card { padding: 24px; margin-bottom: 20px; }
+            .header { padding: 32px 16px 28px; margin-bottom: 24px; }
+            .header .header-icon { font-size: 40px; left: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <span class="header-icon">⚖️</span>
+        <h1>网约车聚合平台交通事故<br>比例连带责任计算器</h1>
+    </div>
+
+    <div class="container">
+        <!-- 基础参数 -->
+        <div class="card">
+            <h3><span class="icon">📋</span> 基础参数设置</h3>
+            <div class="form-group">
+                <div class="form-label">
+                    网约车司机原因力 %
+                    <span class="hint">（通常为100%）</span>
+                </div>
+                <input type="number" class="form-input" id="driverForce" value="100" 
+                       min="0" max="100" step="0.01" placeholder="网约车司机原因力">
+            </div>
+            <div class="form-group">
+                <div class="form-label">总赔偿金额（元）</div>
+                <input type="number" class="form-input" id="totalComp" value="" 
+                       min="0" step="0.01" placeholder="请输入总赔偿金额">
+            </div>
+        </div>
+
+        <!-- 平台信息 -->
+        <div class="card">
+            <h3><span class="icon">🏢</span> 平台信息</h3>
+            <div id="platformContainer">
+                <!-- 平台条目由 JavaScript 动态生成 -->
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-outline btn-sm" onclick="addPlatform()">➕ 添加平台</button>
+                <button class="btn btn-outline btn-sm" onclick="resetPlatforms()">🔄 重置平台</button>
+            </div>
+        </div>
+
+        <!-- 错误提示 -->
+        <div id="errorBox" class="error-box" style="display: none;"></div>
+
+        <!-- 步骤一按钮和重置 -->
+        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 16px;">
+            <button class="btn btn-full" onclick="calculateBasic()" style="flex: 1;">🔍 步骤一：基础计算</button>
+            <button class="btn btn-outline" onclick="resetPage()" style="white-space: nowrap;">🔄 重置页面</button>
+        </div>
+
+        <!-- 基础计算结果容器 -->
+        <div id="basicResultContainer"></div>
+
+        <!-- 追偿触发条件容器（基础计算后填充） -->
+        <div id="recourseTriggerContainer"></div>
+    </div>
+
+    <script>
+        // ========== 全局状态 ==========
+        let lastBasicResult = null;      // 保存最近一次基础计算结果
+        let allPartyNames = [];          // 保存所有主体名称
+
+        // ========== 平台管理 ==========
+        function createPlatformEntry(index, name = '', force = '') {
+            const div = document.createElement('div');
+            div.className = 'platform-entry';
+            div.innerHTML = `
+                <span class="platform-number">平台${index}</span>
+                <input type="text" class="form-input" name="platform_name" placeholder="平台名称" value="${name}">
+                <label>过错及原因力%</label>
+                <input type="number" class="form-input form-input-small" name="platform_force" 
+                       min="0" max="100" step="0.01" placeholder="0-100" value="${force}">
+            `;
+            return div;
+        }
+
+        function addPlatform() {
+            const container = document.getElementById('platformContainer');
+            const count = container.children.length + 1;
+            container.appendChild(createPlatformEntry(count));
+        }
+
+        function resetPlatforms() {
+            const container = document.getElementById('platformContainer');
+            container.innerHTML = '';
+            // 默认两个平台，名称为聚合平台和入驻平台，比例清空
+            container.appendChild(createPlatformEntry(1, '聚合平台', ''));
+            container.appendChild(createPlatformEntry(2, '入驻平台', ''));
+        }
+
+        // 初始化默认平台
+        function initPlatforms() {
+            resetPlatforms();
+        }
+
+        // ========== 读取平台数据 ==========
+        function getPlatformsData() {
+            const nameInputs = document.querySelectorAll('#platformContainer input[name="platform_name"]');
+            const forceInputs = document.querySelectorAll('#platformContainer input[name="platform_force"]');
+            const platforms = {};
+            for (let i = 0; i < nameInputs.length; i++) {
+                const name = nameInputs[i].value.trim();
+                if (name) {
+                    const forceStr = forceInputs[i].value.trim();
+                    const force = forceStr ? parseFloat(forceStr) : 0;
+                    if (isNaN(force) || force < 0 || force > 100) {
+                        throw new Error(`平台"${name}"的过错及原因力必须在 0-100 之间`);
+                    }
+                    if (platforms[name]) {
+                        throw new Error(`平台名称"${name}"重复`);
+                    }
+                    platforms[name] = force;
+                }
+            }
+            if (Object.keys(platforms).length === 0) {
+                throw new Error('请至少添加一个平台');
+            }
+            return platforms;
+        }
+
+        // ========== 核心计算函数（对应 Python 逻辑） ==========
+        function calculateLiability(platforms, driverForce, totalComp) {
+            const external = {};
+            for (const [name, force] of Object.entries(platforms)) {
+                external[name] = Math.min(force, driverForce);
+            }
+            external['司机'] = driverForce;
+
+            const totalExternal = Object.values(external).reduce((sum, val) => sum + val, 0);
+
+            const internalShares = {};
+            for (const [name, val] of Object.entries(external)) {
+                internalShares[name] = val / totalExternal;
+            }
+
+            const finalResp = {};
+            for (const [name, share] of Object.entries(internalShares)) {
+                finalResp[name] = {
+                    ratio: share * 100,
+                    amount: totalComp * share
+                };
+            }
+
+            return {
+                external: external,
+                totalExternal: totalExternal,
+                internalShares: internalShares,
+                finalResp: finalResp,
+                totalComp: totalComp
+            };
+        }
+
+        function calculateRecourse(platforms, driverForce, totalComp, payerName, payerPaidRatio) {
+            const base = calculateLiability(platforms, driverForce, totalComp);
+            const payerInternalShare = base.internalShares[payerName];
+            const excessRatio = payerPaidRatio - payerInternalShare;
+            const excessAmount = totalComp * excessRatio;
+
+            const otherParties = {};
+            for (const name of Object.keys(base.internalShares)) {
+                if (name !== payerName) {
+                    otherParties[name] = base.internalShares[name];
+                }
+            }
+            const othersTotalShare = Object.values(otherParties).reduce((sum, val) => sum + val, 0);
+
+            const details = [];
+            for (const [name, share] of Object.entries(otherParties)) {
+                const recRatio = excessRatio * (share / othersTotalShare);
+                const recAmount = totalComp * recRatio;
+                details.push({
+                    target: name,
+                    ratio: recRatio * 100,
+                    amount: recAmount,
+                    targetRemainingRatio: (share - recRatio) * 100,
+                    targetRemainingAmount: base.finalResp[name].amount - recAmount
+                });
+            }
+
+            return {
+                payerName: payerName,
+                actualRatio: payerPaidRatio * 100,
+                internalRatio: payerInternalShare * 100,
+                excessRatio: excessRatio * 100,
+                excessAmount: excessAmount,
+                details: details,
+                finalPayerRatio: payerInternalShare * 100,
+                finalPayerAmount: totalComp * payerInternalShare
+            };
+        }
+
+        // ========== 格式化工具 ==========
+        function formatMoney(amount) {
+            return '¥ ' + amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatPercent(value) {
+            return value.toFixed(2) + '%';
+        }
+
+        // ========== 显示错误 ==========
+        function showError(msg) {
+            const errorBox = document.getElementById('errorBox');
+            errorBox.textContent = '⚠️ ' + msg;
+            errorBox.style.display = 'block';
+            errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function hideError() {
+            document.getElementById('errorBox').style.display = 'none';
+        }
+
+        // ========== 步骤一：基础计算 ==========
+        function calculateBasic() {
+            hideError();
+            try {
+                const driverForce = parseFloat(document.getElementById('driverForce').value);
+                if (isNaN(driverForce) || driverForce < 0 || driverForce > 100) {
+                    throw new Error('网约车司机原因力必须在 0-100 之间');
+                }
+                const totalCompStr = document.getElementById('totalComp').value.trim();
+                const totalComp = totalCompStr ? parseFloat(totalCompStr) : 0;
+                if (isNaN(totalComp) || totalComp < 0) {
+                    throw new Error('总赔偿金额无效');
+                }
+
+                const platforms = getPlatformsData();
+
+                // 执行基础计算
+                const result = calculateLiability(platforms, driverForce, totalComp);
+                lastBasicResult = result;
+                allPartyNames = [...Object.keys(platforms), '司机'];
+
+                // 渲染基础结果
+                renderBasicResult(result);
+
+                // 渲染追偿触发条件
+                renderRecourseTrigger(allPartyNames);
+
+                // 隐藏旧的追偿结果（如果有）
+                document.getElementById('recourseResultContainer')?.remove();
+
+            } catch (e) {
+                showError(e.message);
+                document.getElementById('basicResultContainer').innerHTML = '';
+                document.getElementById('recourseTriggerContainer').innerHTML = '';
+            }
+        }
+
+        // ========== 渲染基础结果 ==========
+        function renderBasicResult(result) {
+            const container = document.getElementById('basicResultContainer');
+            let html = `
+                <div class="card">
+                    <h3><span class="icon">📊</span> 对外责任比例</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>责任主体</th>
+                                <th>对外责任比例</th>
+                                <th>备注</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            const entries = Object.entries(result.external);
+            entries.forEach(([name, val], index) => {
+                html += `
+                    <tr>
+                        <td><strong>${name}</strong></td>
+                        <td>${formatPercent(val)}</td>
+                        ${index === 0 ? `<td rowspan="${entries.length}" style="vertical-align: middle; font-size: 12px; color: #5f6368;">
+                            责任比例重叠部分由全体侵权人承担连带责任
+                        </td>` : ''}
+                    </tr>
+                `;
+            });
+            html += `
+                        </tbody>
+                        <tfoot>
+                            <tr class="summary-row">
+                                <td><strong>合计</strong></td>
+                                <td class="highlight">${formatPercent(result.totalExternal)}</td>
+                                <td>&gt;100%为正常</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <h3 style="margin-top: 20px;"><span class="icon">📐</span> 内部责任份额（填平原则）</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>责任主体</th>
+                                <th>内部份额</th>
+                                <th>最终赔偿金额</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            for (const [name, info] of Object.entries(result.finalResp)) {
+                html += `
+                    <tr>
+                        <td><strong>${name}</strong></td>
+                        <td>${formatPercent(info.ratio)}</td>
+                        <td class="amount"><strong>${formatMoney(info.amount)}</strong></td>
+                    </tr>
+                `;
+            }
+            html += `
+                        </tbody>
+                        <tfoot>
+                            <tr class="summary-row" style="background: #e6f4ea;">
+                                <td><strong>合计</strong></td>
+                                <td>100.00%</td>
+                                <td class="amount">${formatMoney(result.totalComp)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        // ========== 渲染追偿触发条件 ==========
+        function renderRecourseTrigger(names) {
+            const container = document.getElementById('recourseTriggerContainer');
+            let options = '<option value="">-- 请选择超额支付主体 --</option>';
+            for (const name of names) {
+                options += `<option value="${name}">${name}</option>`;
+            }
+            container.innerHTML = `
+                <div class="card">
+                    <h3><span class="icon">💸</span> 追偿触发条件</h3>
+                    <div class="form-group">
+                        <div class="form-label">超额支付主体</div>
+                        <select class="form-select" id="recoursePayer">${options}</select>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label">该主体实际承担比例 %</div>
+                        <input type="number" class="form-input" id="recoursePaidRatio" 
+                               min="0" max="200" step="0.01" placeholder="例如：100（表示承担了100%）">
+                    </div>
+                    <p style="font-size: 11px; color: #999; margin-top: 4px;">
+                        💡 输入该主体实际对外承担的赔偿比例，系统自动计算应追偿份额
+                    </p>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-top: 12px;">
+                        <button class="btn btn-full-recourse" onclick="calculateRecourseOnly()" style="flex: 1;">💸 步骤二：追偿计算</button>
+                        <button class="btn btn-outline" onclick="resetStep2()" style="white-space: nowrap;">🔄 重置步骤二</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ========== 步骤二：追偿计算 ==========
+        function calculateRecourseOnly() {
+            hideError();
+            try {
+                if (!lastBasicResult) {
+                    throw new Error('请先完成步骤一：基础计算');
+                }
+                const payer = document.getElementById('recoursePayer').value;
+                if (!payer) {
+                    throw new Error('请选择超额支付主体');
+                }
+                const paidRatioStr = document.getElementById('recoursePaidRatio').value.trim();
+                if (!paidRatioStr) {
+                    throw new Error('请输入实际承担比例');
+                }
+                const paidRatio = parseFloat(paidRatioStr) / 100;
+                if (isNaN(paidRatio) || paidRatio < 0 || paidRatio > 2) {
+                    throw new Error('实际承担比例必须在 0-200% 之间');
+                }
+                if (!allPartyNames.includes(payer)) {
+                    throw new Error('无效的支付主体');
+                }
+
+                // 获取基础数据
+                const platforms = getPlatformsData();
+                const driverForce = parseFloat(document.getElementById('driverForce').value);
+                const totalComp = parseFloat(document.getElementById('totalComp').value) || 0;
+
+                // 计算追偿
+                const recourseResult = calculateRecourse(platforms, driverForce, totalComp, payer, paidRatio);
+                renderRecourseResult(recourseResult);
+            } catch (e) {
+                showError(e.message);
+            }
+        }
+
+        // ========== 渲染追偿结果 ==========
+        function renderRecourseResult(result) {
+            // 移除旧的结果容器（如果存在）
+            const old = document.getElementById('recourseResultContainer');
+            if (old) old.remove();
+
+            const container = document.createElement('div');
+            container.id = 'recourseResultContainer';
+            container.className = 'card';
+            container.style.borderTop = '4px solid #f9ab00';
+            container.innerHTML = `
+                <h3><span class="icon">💸</span> 追偿计算结果</h3>
+                <div class="recourse-box">
+                    <h4>📌 超额支付概况</h4>
+                    <table>
+                        <tr><td>超额支付主体</td><td><strong>${result.payerName}</strong></td></tr>
+                        <tr><td>实际承担比例</td><td><span class="tag tag-danger">${formatPercent(result.actualRatio)}</span></td></tr>
+                        <tr><td>内部应担比例</td><td><span class="tag tag-success">${formatPercent(result.internalRatio)}</span></td></tr>
+                        <tr><td class="highlight">超额比例</td><td><span class="highlight">${formatPercent(result.excessRatio)}</span></td></tr>
+                        <tr><td class="highlight">超额金额</td><td><strong class="highlight">${formatMoney(result.excessAmount)}</strong></td></tr>
+                    </table>
+                </div>
+                <h4 style="margin-top: 16px;">📋 追偿明细</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>追偿对象</th>
+                            <th>追偿比例</th>
+                            <th>追偿金额</th>
+                            <th>追偿后对方剩余</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${result.details.map(item => `
+                            <tr>
+                                <td><strong>${item.target}</strong></td>
+                                <td>${formatPercent(item.ratio)}</td>
+                                <td class="amount"><strong>${formatMoney(item.amount)}</strong></td>
+                                <td>${formatPercent(item.targetRemainingRatio)}（${formatMoney(item.targetRemainingAmount)}）</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div class="recourse-box">
+                    <h4>✅ 追偿后 ${result.payerName} 实际承担</h4>
+                    <p style="font-size: 14px;">
+                        比例：<strong style="color: var(--success);">${formatPercent(result.finalPayerRatio)}</strong>
+                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                        金额：<strong style="color: var(--success);">${formatMoney(result.finalPayerAmount)}</strong>
+                    </p>
+                </div>
+            `;
+
+            // 插入到追偿触发条件卡片之后
+            const triggerContainer = document.getElementById('recourseTriggerContainer');
+            triggerContainer.after(container);
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ========== 重置步骤二 ==========
+        function resetStep2() {
+            const payerSelect = document.getElementById('recoursePayer');
+            if (payerSelect) payerSelect.value = '';
+            const paidInput = document.getElementById('recoursePaidRatio');
+            if (paidInput) paidInput.value = '';
+            const resultContainer = document.getElementById('recourseResultContainer');
+            if (resultContainer) resultContainer.remove();
+        }
+
+        // ========== 重置整个页面 ==========
+        function resetPage() {
+            // 清空所有输入
+            document.getElementById('driverForce').value = '100';
+            document.getElementById('totalComp').value = '';
+            resetPlatforms(); // 恢复默认平台并清空比例
+            hideError();
+            document.getElementById('basicResultContainer').innerHTML = '';
+            document.getElementById('recourseTriggerContainer').innerHTML = '';
+            const old = document.getElementById('recourseResultContainer');
+            if (old) old.remove();
+            lastBasicResult = null;
+            allPartyNames = [];
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ========== 页面初始化 ==========
+        window.onload = function() {
+            initPlatforms();
+            hideError();
+        };
+    </script>
+</body>
+</html>
